@@ -1,4 +1,4 @@
-import axios, { AxiosError, AxiosResponse } from 'axios'
+import axios from 'axios'
 import { MailData } from '@sendgrid/helpers/classes/mail'
 
 const api = axios.create({

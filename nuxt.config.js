@@ -33,6 +33,10 @@ export default {
     {
       src: '@/plugins/vue-material.ts',
       mode: 'client'
+    },
+    {
+      src: '@/plugins/googleMapsLoader.ts',
+      mode: 'client'
     }
   ],
 

@@ -4,10 +4,8 @@
 
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
-import { Loader } from '@googlemaps/js-api-loader'
 import { SET_SELECTED_COVID_DATA } from '@/models/vuex'
-
-const apiKey: string = process.env.GOOGLE_MAPS_API_KEY || ''
+import googleMapsLoader from '@/plugins/googleMapsLoader'
 
 @Component({})
 export default class Map extends Vue {
@@ -25,11 +23,7 @@ export default class Map extends Vue {
   }
 
   mounted() {
-    const loader = new Loader({
-      apiKey,
-      version: 'weekly'
-    })
-    loader.load().then(() => {
+    googleMapsLoader.load().then(() => {
       this.$store.subscribe((mutation, state) => {
         if(mutation.type === SET_SELECTED_COVID_DATA) {
           this.setGoogleMap(state?.selectedCovidData?.attributes.Lat, state?.selectedCovidData?.attributes.Long_, 4);
