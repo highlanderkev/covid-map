@@ -5,6 +5,12 @@ export default {
   // Target: https://go.nuxtjs.dev/config-target
   target: 'static',
 
+  // https://nuxtjs.org/docs/configuration-glossary/configuration-env/
+  env: {
+    GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
+    SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
+  },
+
   // Global page headers: https://go.nuxtjs.dev/config-head
   head: {
     title: 'Covid-19 Cases Interactive Map',
