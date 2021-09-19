@@ -1,18 +1,19 @@
 <template>
   <div v-if="covidData">
-    <b-card
-      v-if="cardTitle"
-      :title="cardTitle">
-      <b-card-text>
+    <md-card v-if="cardTitle">
+      <md-card-header>
+        <div class="md-title">{{ cardTitle }}</div>
+      </md-card-header>
+      <md-card-content>
         Covid Statistics for Selected Country.
-      </b-card-text>
-      <b-list-group>
-        <b-list-group-item v-if="confirmedCases">
-          Confirmed Cases: {{ confirmedCases }}
-        </b-list-group-item>
-      </b-list-group>
-    </b-card>
-    {{ covidData }}
+        <md-list>
+          <md-list-item v-if="confirmedCases">
+            Confirmed Cases: {{ confirmedCases }}
+          </md-list-item>
+        </md-list>
+        {{ covidData }}
+      </md-card-content>
+    </md-card>
   </div>
 </template>
 
