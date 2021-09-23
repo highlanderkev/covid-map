@@ -13,6 +13,7 @@ export default {
     TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
     TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
     TWILIO_SMS_NUMBER: process.env.TWILIO_SMS_NUMBER,
+    GOOGLE_TAG_ID: process.env.GOOGLE_TAG_ID,
   },
 
   // Global page headers: https://go.nuxtjs.dev/config-head
@@ -54,6 +55,10 @@ export default {
     },
     {
       src: '@/plugins/vue-e164.ts',
+      mode: 'client'
+    },
+    {
+      src: '@/plugins/vue-gtag.ts',
       mode: 'client'
     },
     {

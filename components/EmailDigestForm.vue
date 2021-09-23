@@ -34,7 +34,7 @@ import sendGridMail from '@/plugins/sendGridMail'
 import eventEmitter from '@/plugins/eventEmitter'
 import { CountryCovidStatistics, SHOW_DIGESTFORM, SHOW_SNACKBAR } from '@/models'
 
-const sendGridEmailAddress = process.env.SENDGRID_EMAIL_ADDRESS || 'mail@kevinpatrickwestropp.com'
+const sendGridEmailAddress = process.env.SENDGRID_EMAIL_ADDRESS
 
 @Component({
   components: {
@@ -58,7 +58,7 @@ export default class EmailDigestForm extends Vue {
   }
 
   get emailSender(): string {
-    return sendGridEmailAddress
+    return sendGridEmailAddress as string
   }
 
   get emailSubject(): string {
