@@ -6,18 +6,6 @@ sendGridMail.setApiKey(process.env.SENDGRID_API_KEY || '')
 
 interface Email extends MailData {}
 
-// class SendGridMail {
-
-//   private errorHandler(error: any) {
-//     // eslint-disable-next-line no-console
-//     console.error(`${error}`)
-//   }
-
-//   async sendMail(email: Email): Promise<any> {
-//     return await sendGridMail.send(email as sendGridMail.MailDataRequired).catch(this.errorHandler)
-//   }
-// }
-
 function errorHandler(error: any) {
   // eslint-disable-next-line no-console
   console.error(`${error}`)

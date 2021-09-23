@@ -1,13 +1,18 @@
 <template>
-  <form @submit="onSubmit" @reset="onReset">
-    <!-- <b-form-group id="country-input-group" label="Search by Country: " label-for="country-input">
-      <b-form-input id="country-input" v-model="countryInput" placeholder="Enter a Country" type="text" ></b-form-input>
-    </b-form-group>
-    <b-button type="submit" variant="primary">Submit</b-button>
-    <b-button type="reset" variant="danger">Reset</b-button> -->
-    <md-autocomplete v-model="selectedCountry" :md-options="countries" :md-open-on-focus="false">
-      <label>Country</label>
-    </md-autocomplete>
+  <form class="md-layout" @submit="onSubmit" @reset="onReset">
+    <md-card class="md-layout-item">
+      <md-card-header>
+        <div class="md-title">Country Lookup</div>
+      </md-card-header>
+        <md-autocomplete
+          v-model="selectedCountry"
+          :md-options="countries"
+          :md-open-on-focus="openOnFocus"
+          md-layout="box"
+          md-dense>
+          <label>Country</label>
+        </md-autocomplete>
+    </md-card>
   </form>
 </template>
 
@@ -17,10 +22,12 @@ import {
   SET_SELECTED_COUNTRY,
   GET_LIST_OF_AVAILABLE_COUNTRIES,
   SET_COVID_DATA_FOR_SELECTED_COUNTRY,
-} from '@/models/vuex'
+} from '@/models'
 
 @Component({})
 export default class CountryInputForm extends Vue {
+  openOnFocus = true
+
   get countries() {
     return this.$store.getters[GET_LIST_OF_AVAILABLE_COUNTRIES]
   }
@@ -33,6 +40,9 @@ export default class CountryInputForm extends Vue {
     this.$store.commit({
       type: SET_SELECTED_COUNTRY,
       selectedCountry: value
+    })
+    this.$store.dispatch({
+      type: SET_COVID_DATA_FOR_SELECTED_COUNTRY,
     })
   }
 

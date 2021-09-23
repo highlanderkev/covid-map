@@ -2,7 +2,7 @@ import { VuexState } from "@/models/vuex"
 
 const state = (): VuexState => ({
   selectedCountry: '',
-  covidData: {},
+  covidData: [],
   selectedCovidData: {}
 })
 
