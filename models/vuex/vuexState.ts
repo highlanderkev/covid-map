@@ -1,7 +1,7 @@
-import { CovidData, CountryCovidData } from '@/models/covidData';
+import { CountryCovidStatistics } from '@/models/covidData';
 
 export interface VuexState {
   selectedCountry: string;
-  covidData: CovidData;
-  selectedCovidData: CountryCovidData;
+  covidData: Array<CountryCovidStatistics>;
+  selectedCovidData: CountryCovidStatistics;
 }

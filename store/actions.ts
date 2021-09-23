@@ -6,10 +6,11 @@ import {
   SET_COVID_DATA_FOR_SELECTED_COUNTRY,
   VuexState,
 } from '@/models/vuex'
+import { CountryCovidStatistics } from '@/models/covidData'
 import covidApi from "@/plugins/covidApi"
 
 async function getCovidDataForSelectedCountry({ commit, state }: { commit: any, state: VuexState}) {
-  const response = await covidApi.getCovidDataForCountry(state.selectedCountry)
+  const response = await covidApi.getUNStatsCovidDataForCountry(state.selectedCountry)
   commit({
     type: SET_SELECTED_COVID_DATA,
     selectedCovidData: response
@@ -17,7 +18,7 @@ async function getCovidDataForSelectedCountry({ commit, state }: { commit: any, 
 }
 
 async function getCovidData({ commit }: any) {
-  const response = await covidApi.getAllCovidData()
+  const response = await covidApi.getAllUNStatsCovidData()
   commit({
     type: SET_COVID_DATA,
     covidData: response
@@ -25,8 +26,8 @@ async function getCovidData({ commit }: any) {
 }
 
 function setCovidDataForSelectedCountry({ commit, state }: { commit: any, state: VuexState}) {
-  const selectedCovidData = state?.covidData?.features?.find((data) => {
-    return data?.attributes?.Country_Region === state?.selectedCountry
+  const selectedCovidData = state?.covidData?.find((data: CountryCovidStatistics) => {
+    return data?.country === state?.selectedCountry
   })
   commit({
     type: SET_SELECTED_COVID_DATA,

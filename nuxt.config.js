@@ -9,6 +9,10 @@ export default {
   env: {
     GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
     SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
+    SENDGRID_EMAIL_ADDRESS: process.env.SENDGRID_EMAIL_ADDRESS,
+    TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
+    TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
+    TWILIO_SMS_NUMBER: process.env.TWILIO_SMS_NUMBER,
   },
 
   // Global page headers: https://go.nuxtjs.dev/config-head
@@ -42,6 +46,18 @@ export default {
     },
     {
       src: '@/plugins/googleMapsLoader.ts',
+      mode: 'client'
+    },
+    {
+      src: '@/plugins/vee-validate.ts',
+      mode: 'client'
+    },
+    {
+      src: '@/plugins/vue-e164.ts',
+      mode: 'client'
+    },
+    {
+      src: '@/plugins/vue-tel-input.ts',
       mode: 'client'
     }
   ],
