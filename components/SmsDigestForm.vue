@@ -39,7 +39,7 @@ import sendTwilioSms from '@/plugins/sendTwilioSms'
 import { CountryCovidStatistics, SHOW_DIGESTFORM, SHOW_SNACKBAR } from '@/models'
 import eventEmitter from '@/plugins/eventEmitter'
 
-const smsPhoneNumber = process.env.TWILIO_SMS_NUMBER || ''
+const smsPhoneNumber = process.env.TWILIO_SMS_NUMBER
 
 @Component({
   directives: {
@@ -70,7 +70,7 @@ export default class SmsDigestForm extends Vue {
   }
 
   get smsSender(): string {
-    return smsPhoneNumber
+    return smsPhoneNumber as string
   }
 
   get smsMessage(): string {
