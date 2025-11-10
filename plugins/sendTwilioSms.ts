@@ -12,9 +12,11 @@ interface SMS {
 
 class SendTwilioSms {
 
-  private errorHandler(error: any) {
+  private errorHandler(error: any): never {
     // eslint-disable-next-line no-console
-    console.error(`${error}`)
+    console.error(`Error sending SMS: ${error}`);
+    // Re-throw error so it can be properly handled by calling code
+    throw error;
   }
 
   async sendSms(sms: SMS): Promise<any> {
