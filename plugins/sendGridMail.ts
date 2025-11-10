@@ -9,9 +9,11 @@ interface Email extends MailData {}
 
 class SendGridMail {
 
-  private errorHandler(error: any) {
+  private errorHandler(error: any): never {
     // eslint-disable-next-line no-console
-    console.error(`${error}`)
+    console.error(`Error sending email: ${error}`);
+    // Re-throw error so it can be properly handled by calling code
+    throw error;
   }
 
   async sendMail(email: Email): Promise<any> {
