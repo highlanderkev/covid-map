@@ -24,9 +24,9 @@ const unStatsapi = axios.create({
 // })
 
 class CovidAPI {
-  private errorHandler(error: AxiosError) {
+  private errorHandler(error: AxiosError): never {
     // eslint-disable-next-line no-console
-    const logger = console.error || console.log;
+    const logger = console.error;
     if (error.response) {
       logger(error.response.data);
       logger(error.response.status);
@@ -37,6 +37,14 @@ class CovidAPI {
       logger('Error', error.message);
     }
     logger(error.config);
+    // Re-throw error so it can be properly handled by calling code
+    throw error;
+  }
+
+  private sanitizeQueryValue(value: string): string {
+    // Escape single quotes by doubling them (SQL standard)
+    // This prevents SQL injection in ArcGIS REST API queries
+    return value.replace(/'/g, "''");
   }
 
   private mapUNStatsCovidDataAtrributesToCovidStatistics(attributes: UNStatsCovidDataAttributes): CountryCovidStatistics {
@@ -72,11 +80,13 @@ class CovidAPI {
   }
 
   public async getUNStatsCovidDataForCountry(country: string): Promise<void | CountryCovidStatistics> {
+    // Sanitize country input to prevent SQL injection
+    const sanitizedCountry = this.sanitizeQueryValue(country);
     const response = await unStatsapi.request<any, AxiosResponse<UNStatsApiResponse>>({
       url: '/query',
       method: 'get',
       params: {
-        where: `Country_Region like '${country}'`,
+        where: `Country_Region like '${sanitizedCountry}'`,
         outFields: '*',
         f: 'json'
       }
