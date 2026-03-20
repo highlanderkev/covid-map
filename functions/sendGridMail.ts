@@ -1,59 +1,39 @@
 import { MailData } from '@sendgrid/helpers/classes/mail'
-import sendGridMail from '@sendgrid/mail'
-import { Handler } from '@netlify/functions'
+import sgMail from '@sendgrid/mail'
+import * as functions from 'firebase-functions'
 
-sendGridMail.setApiKey(process.env.SENDGRID_API_KEY || '')
+sgMail.setApiKey(process.env.SENDGRID_API_KEY || '')
 
 interface Email extends MailData {}
 
-const handler: Handler = async (event) => {
+export const sendGridMail = functions.https.onRequest(async (req, res) => {
   try {
-    // Parse and validate request body
-    if (!event.body) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Request body is required' })
-      }
+    // Validate request body
+    if (!req.body || Object.keys(req.body).length === 0) {
+      res.status(400).json({ error: 'Request body is required' })
+      return
     }
 
-    const email: Email = JSON.parse(event.body);
+    const email: Email = req.body
 
     // Validate required fields
     if (!email.to || !email.from || !email.subject) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Missing required fields: to, from, subject' })
-      }
+      res.status(400).json({ error: 'Missing required fields: to, from, subject' })
+      return
     }
 
     // Send email via SendGrid
-    const response = await sendGridMail.send(email as sendGridMail.MailDataRequired);
+    const response = await sgMail.send(email as sgMail.MailDataRequired)
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(response)
-    }
+    res.status(200).json(response)
   } catch (error: any) {
     // eslint-disable-next-line no-console
-    console.error('Error sending email:', error);
-
-    // Handle JSON parse errors
-    if (error instanceof SyntaxError) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Invalid JSON in request body' })
-      }
-    }
+    console.error('Error sending email:', error)
 
     // Handle SendGrid API errors
-    return {
-      statusCode: error.code || 500,
-      body: JSON.stringify({
-        error: 'Failed to send email',
-        message: error.message
-      })
-    }
+    res.status(error.code || 500).json({
+      error: 'Failed to send email',
+      message: error.message
+    })
   }
-}
-
-export { handler };
+})

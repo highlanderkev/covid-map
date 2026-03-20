@@ -88,3 +88,13 @@ sw.*
 
 # Vim swap files
 *.swp
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+functions/lib/
+functions/node_modules/
+
+# Netlify
+.netlify/

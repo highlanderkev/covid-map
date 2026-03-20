@@ -2,7 +2,7 @@ import axios from 'axios'
 import { MailData } from '@sendgrid/helpers/classes/mail'
 
 const api = axios.create({
-  baseURL: '/.netlify/functions/'
+  baseURL: '/api/'
 })
 
 interface Email extends MailData {}

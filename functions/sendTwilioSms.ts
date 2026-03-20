@@ -1,5 +1,5 @@
 
-import { Handler } from '@netlify/functions'
+import * as functions from 'firebase-functions'
 import Client from 'twilio'
 
 const twilioClient = Client(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN)
@@ -10,24 +10,20 @@ interface SMS {
   message: string;
 }
 
-const handler: Handler = async (event) => {
+export const sendTwilioSms = functions.https.onRequest(async (req, res) => {
   try {
-    // Parse and validate request body
-    if (!event.body) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Request body is required' })
-      }
+    // Validate request body
+    if (!req.body || Object.keys(req.body).length === 0) {
+      res.status(400).json({ error: 'Request body is required' })
+      return
     }
 
-    const sms: SMS = JSON.parse(event.body);
+    const sms: SMS = req.body
 
     // Validate required fields
     if (!sms.to || !sms.from || !sms.message) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Missing required fields: to, from, message' })
-      }
+      res.status(400).json({ error: 'Missing required fields: to, from, message' })
+      return
     }
 
     // Send SMS via Twilio
@@ -35,33 +31,17 @@ const handler: Handler = async (event) => {
       to: sms.to,
       from: sms.from,
       body: sms.message
-    });
+    })
 
-    return {
-      statusCode: 200,
-      body: JSON.stringify(response)
-    }
+    res.status(200).json(response)
   } catch (error: any) {
     // eslint-disable-next-line no-console
-    console.error('Error sending SMS:', error);
-
-    // Handle JSON parse errors
-    if (error instanceof SyntaxError) {
-      return {
-        statusCode: 400,
-        body: JSON.stringify({ error: 'Invalid JSON in request body' })
-      }
-    }
+    console.error('Error sending SMS:', error)
 
     // Handle Twilio API errors
-    return {
-      statusCode: error.status || 500,
-      body: JSON.stringify({
-        error: 'Failed to send SMS',
-        message: error.message
-      })
-    }
+    res.status(error.status || 500).json({
+      error: 'Failed to send SMS',
+      message: error.message
+    })
   }
-}
-
-export { handler };
+})
