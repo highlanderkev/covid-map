@@ -6,7 +6,6 @@ const api = axios.create({
 
 interface SMS {
   to: string;
-  from: string;
   message: string;
 }
 

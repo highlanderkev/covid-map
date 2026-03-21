@@ -61,7 +61,6 @@ async function onSubmit() {
   try {
     await sendTwilioSms.sendSms({
       to: formattedPhoneNumberE164.value,
-      from: config.public.TWILIO_SMS_NUMBER as string,
       message: smsMessage.value
     })
     eventEmitter.emit('SHOW_SNACKBAR', 'Success!')

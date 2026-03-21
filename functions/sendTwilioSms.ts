@@ -6,7 +6,6 @@ const twilioClient = Client(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_A
 
 interface SMS {
   to: string;
-  from: string;
   message: string;
 }
 
@@ -21,15 +20,22 @@ export const sendTwilioSms = functions.https.onRequest(async (req, res) => {
     const sms: SMS = req.body
 
     // Validate required fields
-    if (!sms.to || !sms.from || !sms.message) {
-      res.status(400).json({ error: 'Missing required fields: to, from, message' })
+    if (!sms.to || !sms.message) {
+      res.status(400).json({ error: 'Missing required fields: to, message' })
+      return
+    }
+
+    // Use server-side configured sender number to prevent abuse
+    const fromNumber = process.env.TWILIO_SMS_NUMBER
+    if (!fromNumber) {
+      res.status(500).json({ error: 'Server misconfiguration: sender number not set' })
       return
     }
 
     // Send SMS via Twilio
     const response = await twilioClient.messages.create({
       to: sms.to,
-      from: sms.from,
+      from: fromNumber,
       body: sms.message
     })
 
