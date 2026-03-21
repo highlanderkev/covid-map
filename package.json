@@ -20,6 +20,7 @@
     "@sendgrid/client": "^7.7.0",
     "@sendgrid/mail": "^7.7.0",
     "axios": "^1.7.2",
+    "firebase": "^10.14.1",
     "mitt": "^3.0.1",
     "nuxt": "^3.12.4",
     "pinia": "^2.1.7",

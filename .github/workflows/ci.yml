@@ -78,6 +78,6 @@ jobs:
           GOOGLE_MAPS_API_KEY: ${{ secrets.GOOGLE_MAPS_API_KEY }}
 
       - name: Deploy to Firebase 🚀
-        run: npx firebase-tools deploy --non-interactive
+        run: npx firebase-tools deploy --project covid-map-1b8c6 --non-interactive
         env:
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
