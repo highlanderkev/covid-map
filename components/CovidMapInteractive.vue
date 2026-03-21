@@ -1,37 +1,21 @@
 <template>
-  <main class="md-layout">
-    <div class="md-layout-item">
-      <CovidDataTable/>
-      <CountryInputForm/>
-    </div>
-    <div class="md-layout-item">
-      <Map/>
-      <CovidDataDisplay/>
-    </div>
-  </main>
+  <v-container fluid>
+    <v-row>
+      <v-col cols="12" md="6">
+        <CovidDataTable />
+        <CountryInputForm />
+      </v-col>
+      <v-col cols="12" md="6">
+        <Map />
+        <CovidDataDisplay />
+      </v-col>
+    </v-row>
+  </v-container>
 </template>
 
-<script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-import Map from '@/components/Map.vue'
-import CountryInputForm from '@/components/CountryInputForm.vue'
-import CovidDataDisplay from '@/components/CovidDataDisplay.vue'
-import CovidDataTable from '@/components/CovidDataTable.vue'
-import { GET_COVID_DATA } from '@/models/vuex'
+<script setup lang="ts">
+import { useCovidStore } from '@/stores/covid'
 
-@Component({
-  components: {
-    Map,
-    CountryInputForm,
-    CovidDataDisplay,
-    CovidDataTable,
-  }
-})
-export default class CovidMapInteractive extends Vue {
-  created() {
-    this.$store.dispatch({
-      type: GET_COVID_DATA
-    })
-  }
-}
+const store = useCovidStore()
+store.fetchAllCovidData()
 </script>

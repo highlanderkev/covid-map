@@ -1,111 +1,74 @@
 <template>
   <div v-if="show">
-    <ValidationObserver v-slot="{ invalid }">
-      <form class="md-layout" @submit.prevent="onSubmit">
-        <md-card class="md-layout-item">
-          <md-card-header>
-            <div class="md-title">SMS Digest Form</div>
-            <div class="md-subhead">Get this Data sent to your phone.</div>
-          </md-card-header>
+    <v-form ref="form" v-model="valid" @submit.prevent="onSubmit" class="mt-4">
+      <v-card variant="flat">
+        <v-card-title class="px-0">SMS Digest Form</v-card-title>
+        <v-card-subtitle class="px-0">Get this Data sent to your phone.</v-card-subtitle>
 
-          <md-card-content>
-            <ValidationProvider ref="phone" v-slot="{ errors }" name="phone" rules="required|phone"  >
-              <md-field>
-                <label>Phone Number</label>
-                <md-input
-                  v-model="phoneNumber"
-                  v-mask="'(###) ###-####'"
-                  type="tel"/>
-                <span v-if="!errors[0]" class="md-helper-text" >Input a valid Phone Number and click 'Send SMS'.</span>
-                <span v-if="errors[0]" class="md-helper-text">{{ errors[0] }}</span>
-              </md-field>
-            </ValidationProvider>
-          </md-card-content>
+        <v-card-text class="px-0">
+          <v-text-field
+            v-model="phoneNumber"
+            :rules="phoneRules"
+            label="Phone Number (e.g. 5551234567)"
+            type="tel"
+            variant="outlined"
+            density="compact"
+            required
+            hint="Input a valid 10-digit Phone Number"
+            persistent-hint
+          ></v-text-field>
+        </v-card-text>
 
-          <md-card-actions>
-            <md-button class="md-raised md-primary" type="submit" :disabled="invalid">Send SMS</md-button>
-          </md-card-actions>
-        </md-card>
-      </form>
-    </ValidationObserver>
+        <v-card-actions class="px-0">
+          <v-btn color="primary" type="submit" variant="elevated" :disabled="!valid">Send SMS</v-btn>
+        </v-card-actions>
+      </v-card>
+    </v-form>
   </div>
 </template>
 
-<script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-import { ValidationProvider, ValidationObserver } from 'vee-validate'
-import { mask } from 'vue-the-mask'
-import sendTwilioSms from '@/plugins/sendTwilioSms'
-import { CountryCovidStatistics, SHOW_DIGESTFORM, SHOW_SNACKBAR } from '@/models'
-import eventEmitter from '@/plugins/eventEmitter'
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useCovidStore } from '@/stores/covid'
+import sendTwilioSms from '@/utils/sendTwilioSms'
+import eventEmitter from '@/utils/eventEmitter'
 
-const smsPhoneNumber = process.env.TWILIO_SMS_NUMBER
+const store = useCovidStore()
+const config = useRuntimeConfig()
 
-@Component({
-  directives: {
-    mask,
-  },
-  components: {
-    ValidationProvider,
-    ValidationObserver,
-  }
-})
-export default class SmsDigestForm extends Vue {
-  phoneNumber = ''
+const valid = ref(false)
+const phoneNumber = ref('')
+const phoneRules = [
+  (v: string) => !!v || 'Phone number is required',
+  (v: string) => v.replace(/\D/g,'').length >= 10 || 'Must be a valid 10-digit number'
+]
 
-  get show(): boolean {
-    return this.$store.state.selectedCovidData && this.$store.state.selectedCovidData !== {}
-  }
+const show = computed(() => Object.keys(store.selectedCovidData || {}).length > 0)
+const selectedCovidData = computed(() => store.selectedCovidData as Record<string, any>)
+const selectedCountry = computed(() => selectedCovidData.value.country || '')
+const confirmedCasesForSelected = computed(() => selectedCovidData.value.confirmed || 0)
 
-  get selectedCovidData(): CountryCovidStatistics {
-    return this.$store.state.selectedCovidData
-  }
+const smsMessage = computed(() => `
+  ${selectedCountry.value} COVID-19 Statistics, ${selectedCountry.value} has ${confirmedCasesForSelected.value} confirmed cases.
+`)
 
-  get selectedCountry(): string {
-    return this.selectedCovidData.country || ''
-  }
+// basic E164 formatting fallback
+const formattedPhoneNumberE164 = computed(() => `+1${phoneNumber.value.replace(/\D/g, '')}`)
 
-  get confirmedCasesForSelected(): number {
-    return this.selectedCovidData?.confirmed || 0
-  }
-
-  get smsSender(): string {
-    return smsPhoneNumber as string
-  }
-
-  get smsMessage(): string {
-    return `
-    ${this.selectedCountry} COVID-19 Statistics, ${this.selectedCountry} has ${this.confirmedCasesForSelected} confirmed cases.
-    `
-  }
-
-  get formattedPhoneNumberE164() {
-    return (this as any).$filterPhone(`1${this.phoneNumber}`, {
-      plus: true,
-      brackets: false,
-      space: false,
-      dash: false,
-      areaCode: true,
+async function onSubmit() {
+  if (!valid.value) return
+  
+  try {
+    await sendTwilioSms.sendSms({
+      to: formattedPhoneNumberE164.value,
+      from: config.public.TWILIO_SMS_NUMBER as string,
+      message: smsMessage.value
     })
-  }
-
-  sendSms(): void {
-    sendTwilioSms.sendSms({
-      to: this.formattedPhoneNumberE164,
-      from: this.smsSender,
-      message: this.smsMessage
-    }).then(() => {
-      eventEmitter.emit(SHOW_SNACKBAR, 'Success!')
-      eventEmitter.emit(SHOW_DIGESTFORM, false)
-    }).catch(() => {
-      eventEmitter.emit(SHOW_SNACKBAR, 'Failed to send, please try again later.')
-      eventEmitter.emit(SHOW_DIGESTFORM, false)
-    })
-  }
-
-  onSubmit(event: Event) {
-    event.preventDefault()
-    this.sendSms()
+    eventEmitter.emit('SHOW_SNACKBAR', 'Success!')
+    eventEmitter.emit('SHOW_DIGESTFORM', false)
+  } catch (err) {
+    eventEmitter.emit('SHOW_SNACKBAR', 'Failed to send, please try again later.')
+    eventEmitter.emit('SHOW_DIGESTFORM', false)
   }
 }
 </script>

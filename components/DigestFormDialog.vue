@@ -1,45 +1,41 @@
 <template>
-  <div>
-    <md-dialog :md-active.sync="showDialog">
-      <md-dialog-title>Digest Form</md-dialog-title>
+  <v-dialog v-model="showDialog" max-width="600">
+    <v-card>
+      <v-card-title>Digest Form</v-card-title>
+      <v-tabs v-model="tab" color="primary">
+        <v-tab value="email">Email</v-tab>
+        <v-tab value="sms">SMS</v-tab>
+      </v-tabs>
+      
+      <v-card-text>
+        <v-window v-model="tab">
+          <v-window-item value="email">
+            <EmailDigestForm />
+          </v-window-item>
+          <v-window-item value="sms">
+            <SmsDigestForm />
+          </v-window-item>
+        </v-window>
+      </v-card-text>
 
-      <md-tabs md-dynamic-height>
-        <md-tab md-label="Email">
-          <EmailDigestForm/>
-        </md-tab>
-
-        <md-tab md-label="SMS">
-          <SmsDigestForm/>
-        </md-tab>
-      </md-tabs>
-
-      <md-dialog-actions>
-        <md-button class="md-primary" @click="showDialog = false">Close</md-button>
-      </md-dialog-actions>
-    </md-dialog>
-  </div>
+      <v-card-actions>
+        <v-spacer></v-spacer>
+        <v-btn color="primary" @click="showDialog = false">Close</v-btn>
+      </v-card-actions>
+    </v-card>
+  </v-dialog>
 </template>
 
-<script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-import EmailDigestForm from '@/components/EmailDigestForm.vue'
-import SmsDigestForm from '@/components/SmsDigestForm.vue'
-import { SHOW_DIGESTFORM } from '@/models'
-import eventEmitter from '@/plugins/eventEmitter'
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import eventEmitter from '@/utils/eventEmitter'
 
-@Component({
-  components: {
-    EmailDigestForm,
-    SmsDigestForm,
-  },
+const showDialog = ref(false)
+const tab = ref('email')
+
+onMounted(() => {
+  eventEmitter.on('SHOW_DIGESTFORM', (toggle: any) => {
+    showDialog.value = toggle || false
+  })
 })
-export default class DigestFormDialog extends Vue {
-  showDialog = false
-
-  mounted() {
-    eventEmitter.on(SHOW_DIGESTFORM, (toggle) => {
-      this.showDialog = toggle || false
-    })
-  }
-}
 </script>

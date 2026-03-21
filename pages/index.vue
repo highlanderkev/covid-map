@@ -1,3 +1,3 @@
 <template>
-  <covid-map-interactive/>
+  <CovidMapInteractive />
 </template>

@@ -1,93 +1,65 @@
 <template>
-  <div v-if="display">
-    <md-card v-if="cardTitle">
-      <md-card-header>
-        <div class="md-title">{{ cardTitle }}</div>
-      </md-card-header>
-      <md-card-content>
-        <md-list>
-          <md-list-item v-if="confirmedCases">
-            Confirmed Cases: {{ confirmedCases }}
-          </md-list-item>
-          <md-list-item v-if="deaths">
-            Deaths: {{ deaths }}
-          </md-list-item>
-          <md-list-item v-if="incidentRate">
-            Incident Rate: {{ incidentRate }}
-          </md-list-item>
-          <md-list-item v-if="mortalityRate">
-            Mortality Rate: {{ mortalityRate }}
-          </md-list-item>
-        </md-list>
-      </md-card-content>
-      <md-card-actions>
-        <md-button class="md-primary" @click="showDigestForm">Digest Form</md-button>
-        <md-button class="md-accent" @click="clearSelection">Clear Selection</md-button>
-      </md-card-actions>
-    </md-card>
+  <div v-if="display" class="mt-4">
+    <v-card v-if="cardTitle">
+      <v-card-title>{{ cardTitle }}</v-card-title>
+      <v-card-text>
+        <v-list lines="one">
+          <v-list-item v-if="confirmedCases">
+            <v-list-item-title>Confirmed Cases: {{ confirmedCases }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item v-if="deaths">
+            <v-list-item-title>Deaths: {{ deaths }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item v-if="incidentRate">
+            <v-list-item-title>Incident Rate: {{ incidentRate }}</v-list-item-title>
+          </v-list-item>
+          <v-list-item v-if="mortalityRate">
+            <v-list-item-title>Mortality Rate: {{ mortalityRate }}</v-list-item-title>
+          </v-list-item>
+        </v-list>
+      </v-card-text>
+      <v-card-actions>
+        <v-btn color="primary" @click="showDigestForm">Digest Form</v-btn>
+        <v-btn color="error" @click="clearSelection">Clear Selection</v-btn>
+      </v-card-actions>
+    </v-card>
   </div>
 </template>
 
-<script lang="ts">
-import {
-  Vue,
-  Component
-} from 'vue-property-decorator'
-import {
-  GET_SELECTED_COVID_DATA_ATTRIBUTES,
-  CountryCovidStatistics,
-  CLEAR_SELECTED_COUNTRY,
-  SHOW_DIGESTFORM,
-} from '@/models'
-import eventEmitter from '~/plugins/eventEmitter'
+<script setup lang="ts">
+import { computed } from 'vue'
+import { useCovidStore } from '@/stores/covid'
+import eventEmitter from '@/utils/eventEmitter'
 
-@Component({
-  components: {
-  }
+const store = useCovidStore()
+
+const display = computed(() => store.selectedCountry)
+const featureAttributes = computed(() => store.getSelectedCovidDataAttributes)
+
+const cardTitle = computed(() => `Covid Statistics for ${featureAttributes.value?.country}`)
+
+const confirmedCases = computed(() => {
+  return featureAttributes.value?.confirmed 
+    ? new Intl.NumberFormat('en-US').format(featureAttributes.value.confirmed as number)
+    : ''
 })
-export default class CovidDataDisplay extends Vue {
-  digestType = 'email'
 
-  get covidData() {
-    return this.$store.state.selectedCovidData
-  }
+const deaths = computed(() => {
+  return featureAttributes.value?.deaths
+    ? new Intl.NumberFormat('en-US').format(featureAttributes.value.deaths as number)
+    : ''
+})
 
-  get display() {
-    return this.$store.state.selectedCountry
-  }
+const incidentRate = computed(() => featureAttributes.value?.incidentRate)
+const mortalityRate = computed(() => featureAttributes.value?.mortalityRate)
 
-  get featureAttributes(): CountryCovidStatistics {
-    return this.$store.getters[GET_SELECTED_COVID_DATA_ATTRIBUTES]
-  }
+function clearSelection() {
+  store.clearSelectedCountry()
+}
 
-  get cardTitle(): string {
-    return `Covid Statistics for ${this.featureAttributes?.country}`
-  }
-
-  get confirmedCases() {
-    return new Intl.NumberFormat('en-US').format(this.featureAttributes?.confirmed as number)
-  }
-
-  get deaths() {
-    return new Intl.NumberFormat('en-US').format(this.featureAttributes?.deaths as number)
-  }
-
-  get incidentRate() {
-    return this.featureAttributes?.incidentRate
-  }
-
-  get mortalityRate() {
-    return this.featureAttributes?.mortalityRate
-  }
-
-  clearSelection(): void {
-    this.$store.commit({
-      type: CLEAR_SELECTED_COUNTRY
-    })
-  }
-
-  showDigestForm(): void {
-    eventEmitter.emit(SHOW_DIGESTFORM, true)
-  }
+function showDigestForm() {
+  // Uses mitt emitter or custom event bus
+  // The original SHOW_DIGESTFORM was imported from '@/models', but we can just use the string.
+  eventEmitter.emit('SHOW_DIGESTFORM', true)
 }
 </script>

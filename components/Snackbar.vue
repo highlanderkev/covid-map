@@ -1,33 +1,30 @@
 <template>
-  <md-snackbar position="center" :md-duration="duration" :md-active.sync="showSnackbar" md-persistent>
-    <span>{{ text }}</span>
-    <md-button class="md-primary" @click="dismiss">Dismiss</md-button>
-  </md-snackbar>
+  <v-snackbar v-model="showSnackbar" :timeout="duration" location="top">
+    {{ text }}
+    <template v-slot:actions>
+      <v-btn color="primary" variant="text" @click="dismiss">Dismiss</v-btn>
+    </template>
+  </v-snackbar>
 </template>
 
-<script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-import eventEmitter from '@/plugins/eventEmitter'
-import { SHOW_SNACKBAR } from '@/models'
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import eventEmitter from '@/utils/eventEmitter'
 
-@Component({})
-export default class Snackbar extends Vue {
-  duration = 4000
-  showSnackbar = false
-  text = ''
+const duration = ref(4000)
+const showSnackbar = ref(false)
+const text = ref('')
 
-  dismiss(event: Event) {
-    event.preventDefault()
-    this.showSnackbar = false
-  }
-
-  mounted() {
-    eventEmitter.on(SHOW_SNACKBAR, (msg) => {
-      if(msg) {
-        this.text = msg
-        this.showSnackbar = true
-      }
-    })
-  }
+function dismiss() {
+  showSnackbar.value = false
 }
+
+onMounted(() => {
+  eventEmitter.on('SHOW_SNACKBAR', (msg: any) => {
+    if(msg) {
+      text.value = msg
+      showSnackbar.value = true
+    }
+  })
+})
 </script>

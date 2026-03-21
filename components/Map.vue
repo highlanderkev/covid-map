@@ -1,59 +1,63 @@
 <template>
-  <md-content>
-    <div ref="googlemap" class="map-container"></div>
-  </md-content>
+  <v-sheet class="map-container" ref="googlemap"></v-sheet>
 </template>
 
-<script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-import { SET_SELECTED_COVID_DATA, VuexState } from '@/models/vuex'
-import googleMapsLoader from '@/plugins/googleMapsLoader'
+<script setup lang="ts">
+import { ref, watch, onMounted } from 'vue'
+import { useCovidStore } from '@/stores/covid'
+import { getGoogleMapsLoader } from '@/utils/googleMapsLoader'
+import { useRuntimeConfig } from '#app'
 
-@Component({})
-export default class Map extends Vue {
-  map?: google.maps.Map
-  marker?: google.maps.Marker
+const store = useCovidStore()
+const config = useRuntimeConfig()
+const googlemap = ref<HTMLElement | null>(null)
 
-  setGoogleMap(lat: number, lng: number, zoom: number): void {
-    this.map = new google.maps.Map(this.$refs.googlemap as Element, {
-      center: {
-        lat,
-        lng
-      },
-      zoom,
-      mapTypeId: google.maps.MapTypeId.ROADMAP
-    });
-    this.setMarker(lat, lng, this.map)
-  }
+let map: any = null
+let marker: any = null
+let loader: any = null
 
-  setMarker(lat: number, lng: number, map: google.maps.Map): void {
-    this.marker = new google.maps.Marker({
-      position: {
-        lat,
-        lng
-      },
-      map,
-      title: 'Selection'
-    })
-  }
-
-  mounted() {
-    googleMapsLoader.load().then(() => {
-      this.$store.subscribe((mutation, state: VuexState) => {
-        if(mutation.type === SET_SELECTED_COVID_DATA && state?.selectedCovidData?.coordinates?.latitude && state?.selectedCovidData?.coordinates?.longitude) {
-          this.setGoogleMap(state?.selectedCovidData?.coordinates?.latitude as number, state?.selectedCovidData?.coordinates?.longitude as number, 4);
-        }
-      })
-      navigator.geolocation.getCurrentPosition(({ coords }) => {
-        this.setGoogleMap(coords.latitude, coords.longitude, 4);
-      })
-    })
-  }
+async function setGoogleMap(lat: number, lng: number, zoom: number) {
+  const { Map } = await loader.importLibrary("maps")
+  map = new Map(googlemap.value as HTMLElement, {
+    center: { lat, lng },
+    zoom,
+    mapId: 'DEMO_MAP_ID',
+    mapTypeId: google.maps.MapTypeId.ROADMAP
+  })
+  setMarker(lat, lng, map)
 }
+
+async function setMarker(lat: number, lng: number, mapInstance: any) {
+  const { AdvancedMarkerElement } = await loader.importLibrary("marker")
+  marker = new AdvancedMarkerElement({
+    position: { lat, lng },
+    map: mapInstance,
+    title: 'Selection'
+  })
+}
+
+onMounted(() => {
+  loader = getGoogleMapsLoader(config.public.GOOGLE_MAPS_API_KEY as string)
+  loader.importLibrary("maps").then(() => {
+    watch(() => store.selectedCovidData, (newData: any) => {
+      if (newData?.coordinates?.latitude && newData?.coordinates?.longitude) {
+        setGoogleMap(newData.coordinates.latitude, newData.coordinates.longitude, 4)
+      }
+    }, { deep: true })
+    
+    // Only conditionally fall back if no selected country
+    if (!store.selectedCountry) {
+      navigator.geolocation.getCurrentPosition(({ coords }) => {
+        setGoogleMap(coords.latitude, coords.longitude, 4)
+      })
+    }
+  })
+})
 </script>
 
 <style lang="scss" scoped>
 .map-container {
   height: 40rem;
+  width: 100%;
 }
 </style>
