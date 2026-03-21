@@ -7,9 +7,8 @@ export const getGoogleMapsLoader = (apiKey: string): Loader => {
     googleMapsLoader = new Loader({
       apiKey,
       version: 'weekly',
-      libraries: ["places"]
+      libraries: ['places'],
     })
   }
   return googleMapsLoader
 }
-

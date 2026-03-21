@@ -5,16 +5,22 @@
       <v-card-text>
         <v-list lines="one">
           <v-list-item v-if="confirmedCases">
-            <v-list-item-title>Confirmed Cases: {{ confirmedCases }}</v-list-item-title>
+            <v-list-item-title
+              >Confirmed Cases: {{ confirmedCases }}</v-list-item-title
+            >
           </v-list-item>
           <v-list-item v-if="deaths">
             <v-list-item-title>Deaths: {{ deaths }}</v-list-item-title>
           </v-list-item>
           <v-list-item v-if="incidentRate">
-            <v-list-item-title>Incident Rate: {{ incidentRate }}</v-list-item-title>
+            <v-list-item-title
+              >Incident Rate: {{ incidentRate }}</v-list-item-title
+            >
           </v-list-item>
           <v-list-item v-if="mortalityRate">
-            <v-list-item-title>Mortality Rate: {{ mortalityRate }}</v-list-item-title>
+            <v-list-item-title
+              >Mortality Rate: {{ mortalityRate }}</v-list-item-title
+            >
           </v-list-item>
         </v-list>
       </v-card-text>
@@ -30,23 +36,30 @@
 import { computed } from 'vue'
 import { useCovidStore } from '@/stores/covid'
 import eventEmitter from '@/utils/eventEmitter'
+import { SHOW_DIGESTFORM } from '@/models/events'
 
 const store = useCovidStore()
 
 const display = computed(() => store.selectedCountry)
 const featureAttributes = computed(() => store.getSelectedCovidDataAttributes)
 
-const cardTitle = computed(() => `Covid Statistics for ${featureAttributes.value?.country}`)
+const cardTitle = computed(
+  () => `Covid Statistics for ${featureAttributes.value?.country}`,
+)
 
 const confirmedCases = computed(() => {
-  return featureAttributes.value?.confirmed 
-    ? new Intl.NumberFormat('en-US').format(featureAttributes.value.confirmed as number)
+  return featureAttributes.value?.confirmed
+    ? new Intl.NumberFormat('en-US').format(
+        featureAttributes.value.confirmed as number,
+      )
     : ''
 })
 
 const deaths = computed(() => {
   return featureAttributes.value?.deaths
-    ? new Intl.NumberFormat('en-US').format(featureAttributes.value.deaths as number)
+    ? new Intl.NumberFormat('en-US').format(
+        featureAttributes.value.deaths as number,
+      )
     : ''
 })
 
@@ -58,8 +71,6 @@ function clearSelection() {
 }
 
 function showDigestForm() {
-  // Uses mitt emitter or custom event bus
-  // The original SHOW_DIGESTFORM was imported from '@/models', but we can just use the string.
-  eventEmitter.emit('SHOW_DIGESTFORM', true)
+  eventEmitter.emit(SHOW_DIGESTFORM, true)
 }
 </script>

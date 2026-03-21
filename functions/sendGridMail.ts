@@ -1,4 +1,3 @@
-import { MailData } from '@sendgrid/helpers/classes/mail'
 import sgMail from '@sendgrid/mail'
 import * as functions from 'firebase-functions'
 
@@ -8,10 +7,42 @@ const sendGridApiKey =
   ''
 
 sgMail.setApiKey(sendGridApiKey)
-interface Email extends MailData {}
+
+interface Email {
+  to: string
+  subject: string
+  text?: string
+  html?: string
+}
+
+// Basic in-memory rate limiter (per Cloud Function instance)
+const rateLimitMap = new Map<string, { count: number; resetAt: number }>()
+const RATE_LIMIT = 5 // max requests per window per IP
+const RATE_WINDOW_MS = 60 * 1000 // 1 minute
+
+function isRateLimited(ip: string): boolean {
+  const now = Date.now()
+  const entry = rateLimitMap.get(ip)
+  if (!entry || now > entry.resetAt) {
+    rateLimitMap.set(ip, { count: 1, resetAt: now + RATE_WINDOW_MS })
+    return false
+  }
+  entry.count++
+  return entry.count > RATE_LIMIT
+}
 
 export const sendGridMail = functions.https.onRequest(async (req, res) => {
   try {
+    // Rate limiting
+    const clientIp =
+      req.ip || (req.headers['x-forwarded-for'] as string) || 'unknown'
+    if (isRateLimited(clientIp)) {
+      res
+        .status(429)
+        .json({ error: 'Too many requests, please try again later' })
+      return
+    }
+
     // Validate request body
     if (!req.body || Object.keys(req.body).length === 0) {
       res.status(400).json({ error: 'Request body is required' })
@@ -21,13 +52,29 @@ export const sendGridMail = functions.https.onRequest(async (req, res) => {
     const email: Email = req.body
 
     // Validate required fields
-    if (!email.to || !email.from || !email.subject) {
-      res.status(400).json({ error: 'Missing required fields: to, from, subject' })
+    if (!email.to || !email.subject) {
+      res.status(400).json({ error: 'Missing required fields: to, subject' })
+      return
+    }
+
+    // Enforce server-side sender address to prevent open relay abuse
+    const fromAddress = process.env.SENDGRID_EMAIL_ADDRESS
+    if (!fromAddress) {
+      res
+        .status(500)
+        .json({ error: 'Server misconfiguration: sender address not set' })
       return
     }
 
     // Send email via SendGrid
-    const response = await sgMail.send(email as sgMail.MailDataRequired)
+    const mailData: sgMail.MailDataRequired = {
+      to: email.to,
+      from: fromAddress,
+      subject: email.subject,
+      text: email.text ?? '',
+      ...(email.html ? { html: email.html } : {}),
+    }
+    const response = await sgMail.send(mailData)
 
     res.status(200).json(response)
   } catch (error: any) {
@@ -38,7 +85,8 @@ export const sendGridMail = functions.https.onRequest(async (req, res) => {
     const statusCodeFromResponse = error?.response?.statusCode
     const statusCodeFromCode = Number(error?.code)
     const statusCode =
-      typeof statusCodeFromResponse === 'number' && Number.isFinite(statusCodeFromResponse)
+      typeof statusCodeFromResponse === 'number' &&
+      Number.isFinite(statusCodeFromResponse)
         ? statusCodeFromResponse
         : Number.isFinite(statusCodeFromCode)
           ? statusCodeFromCode
@@ -46,7 +94,7 @@ export const sendGridMail = functions.https.onRequest(async (req, res) => {
 
     res.status(statusCode).json({
       error: 'Failed to send email',
-      message: error.message
+      message: error.message,
     })
   }
 })

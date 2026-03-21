@@ -29,7 +29,7 @@ const selectedCountry = computed({
   set: (val: string) => {
     store.setSelectedCountry(val)
     store.setCovidDataForSelectedCountryFromStore()
-  }
+  },
 })
 
 function onSubmit() {

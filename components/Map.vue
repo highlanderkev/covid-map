@@ -17,11 +17,11 @@ let marker: any = null
 let loader: any = null
 
 async function setGoogleMap(lat: number, lng: number, zoom: number) {
-  const { Map } = await loader.importLibrary("maps")
+  const { Map } = await loader.importLibrary('maps')
   const mapOptions: any = {
     center: { lat, lng },
     zoom,
-    mapTypeId: google.maps.MapTypeId.ROADMAP
+    mapTypeId: google.maps.MapTypeId.ROADMAP,
   }
 
   const runtimeMapId = (config.public as any)?.GOOGLE_MAPS_MAP_ID
@@ -34,23 +34,31 @@ async function setGoogleMap(lat: number, lng: number, zoom: number) {
 }
 
 async function setMarker(lat: number, lng: number, mapInstance: any) {
-  const { AdvancedMarkerElement } = await loader.importLibrary("marker")
+  const { AdvancedMarkerElement } = await loader.importLibrary('marker')
   marker = new AdvancedMarkerElement({
     position: { lat, lng },
     map: mapInstance,
-    title: 'Selection'
+    title: 'Selection',
   })
 }
 
 onMounted(() => {
   loader = getGoogleMapsLoader(config.public.GOOGLE_MAPS_API_KEY as string)
-  loader.importLibrary("maps").then(() => {
-    watch(() => store.selectedCovidData, (newData: any) => {
-      if (newData?.coordinates?.latitude && newData?.coordinates?.longitude) {
-        setGoogleMap(newData.coordinates.latitude, newData.coordinates.longitude, 4)
-      }
-    }, { deep: true })
-    
+  loader.importLibrary('maps').then(() => {
+    watch(
+      () => store.selectedCovidData,
+      (newData: any) => {
+        if (newData?.coordinates?.latitude && newData?.coordinates?.longitude) {
+          setGoogleMap(
+            newData.coordinates.latitude,
+            newData.coordinates.longitude,
+            4,
+          )
+        }
+      },
+      { deep: true },
+    )
+
     // Only conditionally fall back if no selected country
     if (!store.selectedCountry) {
       navigator.geolocation.getCurrentPosition(({ coords }) => {

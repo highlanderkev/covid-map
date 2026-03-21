@@ -7,13 +7,10 @@ export default defineNuxtConfig({
   runtimeConfig: {
     public: {
       GOOGLE_MAPS_API_KEY: process.env.GOOGLE_MAPS_API_KEY,
-      SENDGRID_API_KEY: process.env.SENDGRID_API_KEY,
       SENDGRID_EMAIL_ADDRESS: process.env.SENDGRID_EMAIL_ADDRESS,
-      TWILIO_ACCOUNT_SID: process.env.TWILIO_ACCOUNT_SID,
-      TWILIO_AUTH_TOKEN: process.env.TWILIO_AUTH_TOKEN,
       TWILIO_SMS_NUMBER: process.env.TWILIO_SMS_NUMBER,
       GOOGLE_TAG_ID: process.env.GOOGLE_TAG_ID,
-    }
+    },
   },
 
   app: {
@@ -27,10 +24,10 @@ export default defineNuxtConfig({
         { rel: 'icon', type: 'image/x-icon', href: '/favicon.ico' },
         {
           rel: 'stylesheet',
-          href: '//fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons'
-        }
-      ]
-    }
+          href: '//fonts.googleapis.com/css?family=Roboto:400,500,700,400italic|Material+Icons',
+        },
+      ],
+    },
   },
 
   css: ['@/assets/scss/main.scss', 'vuetify/styles'],
@@ -39,17 +36,10 @@ export default defineNuxtConfig({
     transpile: ['vuetify', '@googlemaps/js-api-loader'],
   },
 
-  modules: [
-    '@pinia/nuxt',
-    (_options, nuxt) => {
-      nuxt.hooks.hook('vite:extendConfig', (config) => {
-        // @ts-expect-error config plugins might be possibly undefined but rarely true in vite configs inside nuxt
-        config.plugins.push(vuetify({ autoImport: true }))
-      })
-    },
-  ],
+  modules: ['@pinia/nuxt'],
 
   vite: {
+    plugins: [vuetify({ autoImport: true })],
     vue: {
       template: {
         transformAssetUrls,
@@ -58,9 +48,9 @@ export default defineNuxtConfig({
     css: {
       preprocessorOptions: {
         scss: {
-          additionalData: '@use "vuetify/settings" as *;'
-        }
-      }
-    }
+          additionalData: '@use "vuetify/settings" as *;',
+        },
+      },
+    },
   },
 })

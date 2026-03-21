@@ -1,7 +1,9 @@
 <template>
   <v-app>
     <v-app-bar color="primary" density="compact">
-      <v-toolbar-title>COVID-19 Cases Interactive Map Web Application</v-toolbar-title>
+      <v-toolbar-title
+        >COVID-19 Cases Interactive Map Web Application</v-toolbar-title
+      >
     </v-app-bar>
     <v-main>
       <slot />

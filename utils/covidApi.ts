@@ -1,22 +1,24 @@
-import axios, { AxiosError, AxiosResponse } from 'axios'
-import {
+import axios from 'axios'
+import type { AxiosError, AxiosResponse } from 'axios'
+import type {
   UNStatsCovidDataAttributes,
   UNStatsCountryCovidData,
   UNStatsCovidData,
   CountryCovidStatistics,
-} from '@/models/covidData';
+} from '@/models/covidData'
 
 interface UNStatsApiResponse {
-  status?: number | string | null;
-  statusText?: string | null;
-  request?: any | null;
-  headers?: any | null;
-  config?: any | null;
-  data?: UNStatsCovidData | any | null;
+  status?: number | string | null
+  statusText?: string | null
+  request?: any | null
+  headers?: any | null
+  config?: any | null
+  data?: UNStatsCovidData | any | null
 }
 
 const unStatsapi = axios.create({
-  baseURL: 'https://services1.arcgis.com/0MSEUqKaxRlEPj5g/arcgis/rest/services/ncov_cases2_v1/FeatureServer/2/'
+  baseURL:
+    'https://services1.arcgis.com/0MSEUqKaxRlEPj5g/arcgis/rest/services/ncov_cases2_v1/FeatureServer/2/',
 })
 
 // const covid19api = axios.create({
@@ -26,28 +28,30 @@ const unStatsapi = axios.create({
 class CovidAPI {
   private errorHandler(error: AxiosError): never {
     // eslint-disable-next-line no-console
-    const logger = console.error;
+    const logger = console.error
     if (error.response) {
-      logger(error.response.data);
-      logger(error.response.status);
-      logger(error.response.headers);
+      logger(error.response.data)
+      logger(error.response.status)
+      logger(error.response.headers)
     } else if (error.request) {
-      logger(error.request);
+      logger(error.request)
     } else {
-      logger('Error', error.message);
+      logger('Error', error.message)
     }
-    logger(error.config);
+    logger(error.config)
     // Re-throw error so it can be properly handled by calling code
-    throw error;
+    throw error
   }
 
   private sanitizeQueryValue(value: string): string {
     // Escape single quotes by doubling them (SQL standard)
     // This prevents SQL injection in ArcGIS REST API queries
-    return value.replace(/'/g, "''");
+    return value.replace(/'/g, "''")
   }
 
-  private mapUNStatsCovidDataAtrributesToCovidStatistics(attributes: UNStatsCovidDataAttributes): CountryCovidStatistics {
+  private mapUNStatsCovidDataAtrributesToCovidStatistics(
+    attributes: UNStatsCovidDataAttributes,
+  ): CountryCovidStatistics {
     return {
       active: attributes.Active || undefined,
       confirmed: attributes.Confirmed || undefined,
@@ -67,32 +71,56 @@ class CovidAPI {
     }
   }
 
-  private mapUNStatsCovidDataToCovidStatistics(covidData: UNStatsCovidData): CountryCovidStatistics {
-    const attributes: UNStatsCovidDataAttributes = covidData?.features && covidData?.features[0] && covidData?.features[0]?.attributes ? covidData?.features[0]?.attributes : {}
+  private mapUNStatsCovidDataToCovidStatistics(
+    covidData: UNStatsCovidData,
+  ): CountryCovidStatistics {
+    const attributes: UNStatsCovidDataAttributes =
+      covidData?.features &&
+      covidData?.features[0] &&
+      covidData?.features[0]?.attributes
+        ? covidData?.features[0]?.attributes
+        : {}
     return this.mapUNStatsCovidDataAtrributesToCovidStatistics(attributes)
   }
 
-  private mapUNStatsCovidDataToArrayOfCountryCovidStatistics(covidData: UNStatsCovidData): Array<CountryCovidStatistics> {
+  private mapUNStatsCovidDataToArrayOfCountryCovidStatistics(
+    covidData: UNStatsCovidData,
+  ): Array<CountryCovidStatistics> {
     const data = covidData?.features?.map((data: UNStatsCountryCovidData) => {
-      return this.mapUNStatsCovidDataAtrributesToCovidStatistics(data?.attributes as UNStatsCovidDataAttributes) || {}
+      return (
+        this.mapUNStatsCovidDataAtrributesToCovidStatistics(
+          data?.attributes as UNStatsCovidDataAttributes,
+        ) || {}
+      )
     })
     return data || []
   }
 
-  public async getUNStatsCovidDataForCountry(country: string): Promise<void | CountryCovidStatistics> {
+  public async getUNStatsCovidDataForCountry(
+    country: string,
+  ): Promise<void | CountryCovidStatistics> {
     // Sanitize country input to prevent SQL injection
-    const sanitizedCountry = this.sanitizeQueryValue(country);
-    const response = await unStatsapi.request<any, AxiosResponse<UNStatsApiResponse>>({
-      url: '/query',
-      method: 'get',
-      params: {
-        where: `Country_Region like '${sanitizedCountry}'`,
-        outFields: '*',
-        f: 'json'
-      }
-    }).catch(this.errorHandler);
-    if(response && response?.status && response?.status === 200 && response.data) {
-      return this.mapUNStatsCovidDataToCovidStatistics(response.data as UNStatsCovidData)
+    const sanitizedCountry = this.sanitizeQueryValue(country)
+    const response = await unStatsapi
+      .request<any, AxiosResponse<UNStatsApiResponse>>({
+        url: '/query',
+        method: 'get',
+        params: {
+          where: `Country_Region like '${sanitizedCountry}'`,
+          outFields: '*',
+          f: 'json',
+        },
+      })
+      .catch(this.errorHandler)
+    if (
+      response &&
+      response?.status &&
+      response?.status === 200 &&
+      response.data
+    ) {
+      return this.mapUNStatsCovidDataToCovidStatistics(
+        response.data as UNStatsCovidData,
+      )
     } else {
       // eslint-disable-next-line no-console
       console.log(`Response Failed: ${response}`)
@@ -100,17 +128,26 @@ class CovidAPI {
   }
 
   public async getAllUNStatsCovidData(): Promise<void | Array<CountryCovidStatistics>> {
-    const response = await unStatsapi.request<any, AxiosResponse<UNStatsApiResponse>>({
-      url: '/query',
-      method: 'get',
-      params: {
-        where: `1=1`,
-        outFields: '*',
-        f: 'json'
-      }
-    }).catch(this.errorHandler);
-    if(response && response?.status && response?.status === 200 && response.data) {
-      return this.mapUNStatsCovidDataToArrayOfCountryCovidStatistics(response.data as UNStatsCovidData)
+    const response = await unStatsapi
+      .request<any, AxiosResponse<UNStatsApiResponse>>({
+        url: '/query',
+        method: 'get',
+        params: {
+          where: `1=1`,
+          outFields: '*',
+          f: 'json',
+        },
+      })
+      .catch(this.errorHandler)
+    if (
+      response &&
+      response?.status &&
+      response?.status === 200 &&
+      response.data
+    ) {
+      return this.mapUNStatsCovidDataToArrayOfCountryCovidStatistics(
+        response.data as UNStatsCovidData,
+      )
     } else {
       // eslint-disable-next-line no-console
       console.log(`Response Failed: ${response}`)

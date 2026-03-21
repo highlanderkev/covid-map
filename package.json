@@ -8,6 +8,8 @@
     "start": "nuxt preview",
     "generate": "nuxt generate",
     "postinstall": "nuxt prepare",
+    "lint": "prettier --check \"**/*.{ts,vue,js}\" --ignore-path .gitignore",
+    "test": "vue-tsc --noEmit",
     "firebase:deploy": "npm run generate && firebase deploy",
     "firebase:deploy:hosting": "npm run generate && firebase deploy --only hosting",
     "firebase:deploy:functions": "firebase deploy --only functions"

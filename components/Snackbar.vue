@@ -10,6 +10,7 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import eventEmitter from '@/utils/eventEmitter'
+import { SHOW_SNACKBAR } from '@/models/events'
 
 const duration = ref(4000)
 const showSnackbar = ref(false)
@@ -20,8 +21,8 @@ function dismiss() {
 }
 
 onMounted(() => {
-  eventEmitter.on('SHOW_SNACKBAR', (msg: any) => {
-    if(msg) {
+  eventEmitter.on(SHOW_SNACKBAR, (msg: any) => {
+    if (msg) {
       text.value = msg
       showSnackbar.value = true
     }

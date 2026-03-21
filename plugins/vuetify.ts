@@ -3,8 +3,8 @@ import { createVuetify } from 'vuetify'
 export default defineNuxtPlugin((nuxtApp) => {
   const vuetify = createVuetify({
     theme: {
-      defaultTheme: 'light'
-    }
+      defaultTheme: 'light',
+    },
   })
   nuxtApp.vueApp.use(vuetify)
 })

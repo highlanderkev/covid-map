@@ -12,7 +12,12 @@
         </tr>
       </thead>
       <tbody>
-        <tr v-for="item in topTenCountryCovidData" :key="item.country" @click="onSelect(item)" style="cursor: pointer;">
+        <tr
+          v-for="item in topTenCountryCovidData"
+          :key="item.country"
+          @click="onSelect(item)"
+          style="cursor: pointer"
+        >
           <td>{{ item.country }}</td>
           <td>{{ item.confirmed }}</td>
           <td>{{ item.deaths }}</td>
@@ -32,10 +37,13 @@ import type { CountryCovidStatistics } from '@/models/covidData'
 const store = useCovidStore()
 
 const currentSort = ref<keyof CountryCovidStatistics>('country')
-const currentSortOrder = ref<'asc'|'desc'>('asc')
+const currentSortOrder = ref<'asc' | 'desc'>('asc')
 
 const topTenCountryCovidData = computed(() => {
-  return store.getTopTenCountryCovidDataSorted(currentSort.value, currentSortOrder.value)
+  return store.getTopTenCountryCovidDataSorted(
+    currentSort.value,
+    currentSortOrder.value,
+  )
 })
 
 function onSelect(item: CountryCovidStatistics) {

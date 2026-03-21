@@ -6,7 +6,7 @@
         <v-tab value="email">Email</v-tab>
         <v-tab value="sms">SMS</v-tab>
       </v-tabs>
-      
+
       <v-card-text>
         <v-window v-model="tab">
           <v-window-item value="email">
@@ -29,12 +29,13 @@
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
 import eventEmitter from '@/utils/eventEmitter'
+import { SHOW_DIGESTFORM } from '@/models/events'
 
 const showDialog = ref(false)
 const tab = ref('email')
 
 onMounted(() => {
-  eventEmitter.on('SHOW_DIGESTFORM', (toggle: any) => {
+  eventEmitter.on(SHOW_DIGESTFORM, (toggle: any) => {
     showDialog.value = toggle || false
   })
 })
