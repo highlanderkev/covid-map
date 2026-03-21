@@ -18,12 +18,18 @@ let loader: any = null
 
 async function setGoogleMap(lat: number, lng: number, zoom: number) {
   const { Map } = await loader.importLibrary("maps")
-  map = new Map(googlemap.value as HTMLElement, {
+  const mapOptions: any = {
     center: { lat, lng },
     zoom,
-    mapId: 'DEMO_MAP_ID',
     mapTypeId: google.maps.MapTypeId.ROADMAP
-  })
+  }
+
+  const runtimeMapId = (config.public as any)?.GOOGLE_MAPS_MAP_ID
+  if (runtimeMapId) {
+    mapOptions.mapId = runtimeMapId
+  }
+
+  map = new Map(googlemap.value as HTMLElement, mapOptions)
   setMarker(lat, lng, map)
 }
 

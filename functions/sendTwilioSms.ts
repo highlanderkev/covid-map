@@ -39,9 +39,13 @@ export const sendTwilioSms = functions.https.onRequest(async (req, res) => {
     console.error('Error sending SMS:', error)
 
     // Handle Twilio API errors
-    res.status(error.status || 500).json({
+    const status = Number(error?.status)
+    const safeStatus =
+      Number.isInteger(status) && status >= 400 && status <= 599 ? status : 500
+
+    res.status(safeStatus).json({
       error: 'Failed to send SMS',
-      message: error.message
+      message: error?.message,
     })
   }
 })

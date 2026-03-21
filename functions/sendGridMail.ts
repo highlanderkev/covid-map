@@ -2,8 +2,12 @@ import { MailData } from '@sendgrid/helpers/classes/mail'
 import sgMail from '@sendgrid/mail'
 import * as functions from 'firebase-functions'
 
-sgMail.setApiKey(process.env.SENDGRID_API_KEY || '')
+const sendGridApiKey =
+  (functions.config().sendgrid && functions.config().sendgrid.api_key) ||
+  process.env.SENDGRID_API_KEY ||
+  ''
 
+sgMail.setApiKey(sendGridApiKey)
 interface Email extends MailData {}
 
 export const sendGridMail = functions.https.onRequest(async (req, res) => {
@@ -31,7 +35,16 @@ export const sendGridMail = functions.https.onRequest(async (req, res) => {
     console.error('Error sending email:', error)
 
     // Handle SendGrid API errors
-    res.status(error.code || 500).json({
+    const statusCodeFromResponse = error?.response?.statusCode
+    const statusCodeFromCode = Number(error?.code)
+    const statusCode =
+      typeof statusCodeFromResponse === 'number' && Number.isFinite(statusCodeFromResponse)
+        ? statusCodeFromResponse
+        : Number.isFinite(statusCodeFromCode)
+          ? statusCodeFromCode
+          : 500
+
+    res.status(statusCode).json({
       error: 'Failed to send email',
       message: error.message
     })

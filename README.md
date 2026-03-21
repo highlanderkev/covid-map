@@ -44,25 +44,18 @@ $ npm run firebase:deploy:functions
 
 ### Environment Variables
 
-The Cloud Functions require the following environment variables. Set them using the Firebase CLI:
+The Cloud Functions require the following environment variables. They are read from `process.env.*` in the Node.js runtime, so make sure they are set in your deployment environment (for example in your shell, CI/CD pipeline, or Firebase environment configuration/secrets) before deploying:
 
-```bash
-firebase functions:config:set \
-  sendgrid.api_key="YOUR_SENDGRID_API_KEY" \
-  twilio.account_sid="YOUR_TWILIO_ACCOUNT_SID" \
-  twilio.auth_token="YOUR_TWILIO_AUTH_TOKEN"
 ```
 
-For the static site, configure the following environment variables in your CI/CD pipeline or Firebase Hosting environment:
+For the static site, configure the following non-secret environment variables in your CI/CD pipeline or Firebase Hosting environment:
 
 - `GOOGLE_MAPS_API_KEY`
-- `SENDGRID_API_KEY`
 - `SENDGRID_EMAIL_ADDRESS`
-- `TWILIO_ACCOUNT_SID`
-- `TWILIO_AUTH_TOKEN`
 - `TWILIO_SMS_NUMBER`
 - `GOOGLE_TAG_ID`
 
+Backend credentials such as `SENDGRID_API_KEY`, `TWILIO_ACCOUNT_SID`, and `TWILIO_AUTH_TOKEN` must only be set in Firebase Functions config (as shown above), not in the static hosting environment.
 ## Special Directories
 
 You can create the following extra directories, some of which have special behaviors. Only `pages` is required; you can delete them if you don't want to use their functionality.
