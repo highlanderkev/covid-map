@@ -19,6 +19,43 @@ $ npm run generate
 
 For detailed explanation on how things work, check out the [documentation](https://nuxtjs.org).
 
+## Firebase Deployment
+
+This app is hosted on [Firebase](https://firebase.google.com/). The static site is served via Firebase Hosting, and serverless API functions are deployed as Firebase Cloud Functions.
+
+### Prerequisites
+
+1. Install the Firebase CLI: `npm install -g firebase-tools`
+2. Log in to Firebase: `firebase login`
+3. Set your Firebase project ID in `.firebaserc`
+
+### Deploy
+
+```bash
+# Deploy everything (static site + Cloud Functions)
+$ npm run firebase:deploy
+
+# Deploy only the static hosting
+$ npm run firebase:deploy:hosting
+
+# Deploy only the Cloud Functions
+$ npm run firebase:deploy:functions
+```
+
+### Environment Variables
+
+The Cloud Functions require the following environment variables. They are read from `process.env.*` in the Node.js runtime, so make sure they are set in your deployment environment (for example in your shell, CI/CD pipeline, or Firebase environment configuration/secrets) before deploying:
+
+```
+
+For the static site, configure the following non-secret environment variables in your CI/CD pipeline or Firebase Hosting environment:
+
+- `GOOGLE_MAPS_API_KEY`
+- `SENDGRID_EMAIL_ADDRESS`
+- `TWILIO_SMS_NUMBER`
+- `GOOGLE_TAG_ID`
+
+Backend credentials such as `SENDGRID_API_KEY`, `TWILIO_ACCOUNT_SID`, and `TWILIO_AUTH_TOKEN` must only be set in Firebase Functions config (as shown above), not in the static hosting environment.
 ## Special Directories
 
 You can create the following extra directories, some of which have special behaviors. Only `pages` is required; you can delete them if you don't want to use their functionality.

@@ -1,65 +1,55 @@
 <template>
-  <div v-if="topTenCountryCovidData">
-    <md-table
-      v-model="topTenCountryCovidData"
-      :md-sort.sync="currentSort"
-      :md-sort-order.sync="currentSortOrder"
-      :md-sort-fn="customSort"
-      md-card
-      @md-selected="onSelect">
-      <md-table-toolbar>
-        <h1 class="md-title">Top 10 Countries</h1>
-      </md-table-toolbar>
-      <md-table-row slot="md-table-row" slot-scope="{ item }" md-selectable="single">
-        <md-table-cell md-label="Country" md-sort-by="country">{{ item.country }}</md-table-cell>
-        <md-table-cell md-label="Confirmed Cases" md-sort-by="confirmed">{{ item.confirmed }}</md-table-cell>
-        <md-table-cell md-label="Deaths" md-sort-by="deaths">{{ item.deaths }}</md-table-cell>
-        <md-table-cell md-label="Incident Rate" md-sort-by="incidentRate">{{ item.incidentRate }}</md-table-cell>
-        <md-table-cell md-label="Mortality Rate" md-sort-by="mortalityRate">{{ item.mortalityRate }}</md-table-cell>
-      </md-table-row>
-    </md-table>
-  </div>
+  <v-card v-if="topTenCountryCovidData.length">
+    <v-card-title>Top 10 Countries</v-card-title>
+    <v-table hover>
+      <thead>
+        <tr>
+          <th>Country</th>
+          <th>Confirmed Cases</th>
+          <th>Deaths</th>
+          <th>Incident Rate</th>
+          <th>Mortality Rate</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr
+          v-for="item in topTenCountryCovidData"
+          :key="item.country"
+          @click="onSelect(item)"
+          style="cursor: pointer"
+        >
+          <td>{{ item.country }}</td>
+          <td>{{ item.confirmed }}</td>
+          <td>{{ item.deaths }}</td>
+          <td>{{ item.incidentRate }}</td>
+          <td>{{ item.mortalityRate }}</td>
+        </tr>
+      </tbody>
+    </v-table>
+  </v-card>
 </template>
 
-<script lang="ts">
-import {
-  Vue,
-  Component
-} from 'vue-property-decorator'
-import {
-  GET_TOP_TEN_COUNTRY_COVID_DATA_SORTED,
-  CountryCovidStatistics,
-  SET_SELECTED_COUNTRY,
-  SET_COVID_DATA_FOR_SELECTED_COUNTRY,
-} from '@/models'
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useCovidStore } from '@/stores/covid'
+import type { CountryCovidStatistics } from '@/models/covidData'
 
-@Component({})
-export default class CovidDataTable extends Vue {
-  currentSort = 'country'
-  currentSortOrder = 'asc'
+const store = useCovidStore()
 
-  get topTenCountryCovidData(): Array<CountryCovidStatistics> {
-    return this.$store.getters[GET_TOP_TEN_COUNTRY_COVID_DATA_SORTED](this.currentSort, this.currentSortOrder)
-  }
+const currentSort = ref<keyof CountryCovidStatistics>('country')
+const currentSortOrder = ref<'asc' | 'desc'>('asc')
 
-  set topTenCountryCovidData(value){
-  }
+const topTenCountryCovidData = computed(() => {
+  return store.getTopTenCountryCovidDataSorted(
+    currentSort.value,
+    currentSortOrder.value,
+  )
+})
 
-  customSort(): Array<CountryCovidStatistics> {
-    const result = this.$store.getters[GET_TOP_TEN_COUNTRY_COVID_DATA_SORTED](this.currentSort, this.currentSortOrder)
-    return result
-  }
-
-  onSelect(item: CountryCovidStatistics): void {
-    if(item && item.country) {
-      this.$store.commit({
-        type: SET_SELECTED_COUNTRY,
-        selectedCountry: item.country
-      })
-      this.$store.dispatch({
-        type: SET_COVID_DATA_FOR_SELECTED_COUNTRY,
-      })
-    }
+function onSelect(item: CountryCovidStatistics) {
+  if (item && item.country) {
+    store.setSelectedCountry(item.country)
+    store.setCovidDataForSelectedCountryFromStore()
   }
 }
 </script>

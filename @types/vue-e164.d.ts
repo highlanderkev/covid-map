@@ -1,1 +1,1 @@
-declare module 'vue-e164';
+declare module 'vue-e164'

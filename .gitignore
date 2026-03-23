@@ -70,6 +70,11 @@ typings/
 
 # Nuxt generate
 dist
+.output/**
+
+# Gatsby files
+.cache/
+**/.gatsby
 
 # vuepress build output
 .vuepress/dist
@@ -88,3 +93,13 @@ sw.*
 
 # Vim swap files
 *.swp
+
+# Firebase
+.firebase/
+firebase-debug.log
+firebase-debug.*.log
+functions/lib/
+functions/node_modules/
+
+# Netlify
+.netlify/

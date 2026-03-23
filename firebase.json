@@ -1,0 +1,42 @@
+{
+  "hosting": {
+    "public": ".output/public",
+    "predeploy": [
+      "npm run generate"
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "rewrites": [
+      {
+        "source": "/api/sendGridMail",
+        "function": "sendGridMail"
+      },
+      {
+        "source": "/api/sendTwilioSms",
+        "function": "sendTwilioSms"
+      },
+      {
+        "source": "**",
+        "destination": "/index.html"
+      }
+    ]
+  },
+  "functions": [
+    {
+      "source": "functions",
+      "codebase": "default",
+      "ignore": [
+        "node_modules",
+        ".git",
+        "firebase-debug.log",
+        "firebase-debug.*.log"
+      ],
+      "predeploy": [
+        "npm --prefix \"$RESOURCE_DIR\" run build"
+      ]
+    }
+  ]
+}

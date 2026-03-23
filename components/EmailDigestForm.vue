@@ -1,116 +1,104 @@
 <template>
   <div v-if="show">
-    <ValidationObserver v-slot="{ invalid }">
-      <form class="md-layout" @submit.prevent="onSubmit">
-        <md-card class="md-layout-item">
-          <md-card-header>
-            <div class="md-title">Email Digest Form</div>
-            <div class="md-subhead">Get this Data sent to your inbox.</div>
-          </md-card-header>
+    <v-form ref="form" v-model="valid" @submit.prevent="onSubmit" class="mt-4">
+      <v-card variant="flat">
+        <v-card-title class="px-0">Email Digest Form</v-card-title>
+        <v-card-subtitle class="px-0"
+          >Get this Data sent to your inbox.</v-card-subtitle
+        >
 
-          <md-card-content>
-            <ValidationProvider ref="email" v-slot="{ errors }" name="email" rules="required|email"  >
-              <md-field>
-                <label>Email Address</label>
-                <md-input v-model="email" type="text"></md-input>
-                <span v-if="!errors[0]" class="md-helper-text" >Input a valid Email and click 'Send Email'.</span>
-                <span v-if="errors[0]" class="md-helper-text">{{ errors[0] }}</span>
-              </md-field>
-            </ValidationProvider>
-          </md-card-content>
-          <md-card-actions>
-            <md-button class="md-raised md-primary" type="submit" :disabled="invalid">Send Email</md-button>
-          </md-card-actions>
-        </md-card>
-      </form>
-    </ValidationObserver>
+        <v-card-text class="px-0">
+          <v-text-field
+            v-model="email"
+            :rules="emailRules"
+            label="Email Address"
+            type="email"
+            variant="outlined"
+            density="compact"
+            required
+            hint="Input a valid Email and click 'Send Email'."
+            persistent-hint
+          ></v-text-field>
+        </v-card-text>
+
+        <v-card-actions class="px-0">
+          <v-btn
+            color="primary"
+            type="submit"
+            variant="elevated"
+            :disabled="!valid"
+            >Send Email</v-btn
+          >
+        </v-card-actions>
+      </v-card>
+    </v-form>
   </div>
 </template>
 
-<script lang="ts">
-import { Vue, Component } from 'vue-property-decorator'
-import { ValidationProvider, ValidationObserver } from 'vee-validate'
-import sendGridMail from '@/plugins/sendGridMail'
-import eventEmitter from '@/plugins/eventEmitter'
-import { CountryCovidStatistics, SHOW_DIGESTFORM, SHOW_SNACKBAR } from '@/models'
+<script setup lang="ts">
+import { ref, computed } from 'vue'
+import { useCovidStore } from '@/stores/covid'
+import sendGridMail from '@/utils/sendGridMail'
+import eventEmitter from '@/utils/eventEmitter'
+import { SHOW_SNACKBAR, SHOW_DIGESTFORM } from '@/models/events'
 
-const sendGridEmailAddress = process.env.SENDGRID_EMAIL_ADDRESS
+const store = useCovidStore()
 
-@Component({
-  components: {
-    ValidationProvider,
-    ValidationObserver,
-  }
-})
-export default class EmailDigestForm extends Vue {
-  email = ''
+const valid = ref(false)
+const email = ref('')
+const emailRules = [
+  (v: string) => !!v || 'E-mail is required',
+  (v: string) => /.+@.+\..+/.test(v) || 'E-mail must be valid',
+]
 
-  get show(): boolean {
-    return this.$store.state.selectedCovidData && this.$store.state.selectedCovidData !== {}
-  }
+const show = computed(
+  () => Object.keys(store.selectedCovidData || {}).length > 0,
+)
+const selectedCovidData = computed(
+  () => store.selectedCovidData as Record<string, any>,
+)
+const selectedCountry = computed(() => selectedCovidData.value.country || '')
 
-  get selectedCovidData(): CountryCovidStatistics {
-    return this.$store.state.selectedCovidData
-  }
+const emailSubject = computed(
+  () => `${selectedCountry.value} COVID-19 Statistics`,
+)
+const emailText = computed(
+  () => `
+  Confirmed Cases: ${selectedCovidData.value?.confirmed}
+  Deaths: ${selectedCovidData.value?.deaths}
+  Incident Rate: ${selectedCovidData.value?.incidentRate}
+  Mortality Rate: ${selectedCovidData.value?.mortalityRate}
+`,
+)
+const emailHtml = computed(
+  () => `
+  <table>
+    <tr><th>Confirmed Cases</th><th>Deaths</th><th>Incident Rate</th><th>Mortality Rate</th></tr>
+    <tr>
+      <td>${selectedCovidData.value?.confirmed}</td>
+      <td>${selectedCovidData.value?.deaths}</td>
+      <td>${selectedCovidData.value?.incidentRate}</td>
+      <td>${selectedCovidData.value?.mortalityRate}</td>
+    </tr>
+  </table>
+`,
+)
 
-  get selectedCountry(): string {
-    return this.selectedCovidData.country || ''
-  }
+async function onSubmit() {
+  if (!valid.value) return
 
-  get emailSender(): string {
-    return sendGridEmailAddress as string
-  }
-
-  get emailSubject(): string {
-    return `${this.selectedCountry} COVID-19 Statistics`
-  }
-
-  get emailText(): string {
-    return `
-    Confirmed Cases: ${this.selectedCovidData?.confirmed}
-    Deaths: ${this.selectedCovidData?.deaths}
-    Incident Rate: ${this.selectedCovidData?.incidentRate}
-    Mortality Rate: ${this.selectedCovidData?.mortalityRate}
-    `
-  }
-
-  get emailHtml(): string {
-    return `
-    <table>
-      <tr>
-        <th>Confirmed Cases</th>
-        <th>Deaths</th>
-        <th>Incident Rate</th>
-        <th>Mortality Rate</th>
-      </tr>
-      <tr>
-        <td>${this.selectedCovidData?.confirmed}</td>
-        <td>${this.selectedCovidData?.deaths}</td>
-        <td>${this.selectedCovidData?.incidentRate}</td>
-        <td>${this.selectedCovidData?.mortalityRate}</td>
-      </tr>
-    </table>`
-  }
-
-  sendEmail() {
-    sendGridMail.sendMail({
-      to: this.email,
-      from: this.emailSender,
-      subject: this.emailSubject,
-      text: this.emailText,
-      html: this.emailHtml
-    }).then(() => {
-      eventEmitter.emit(SHOW_SNACKBAR, 'Success!')
-      eventEmitter.emit(SHOW_DIGESTFORM, false)
-    }).catch(() => {
-      eventEmitter.emit(SHOW_SNACKBAR, 'Failed to send, please try again later.')
-      eventEmitter.emit(SHOW_DIGESTFORM, false)
+  try {
+    await sendGridMail.sendMail({
+      to: email.value,
+      subject: emailSubject.value,
+      text: emailText.value,
+      html: emailHtml.value,
     })
-  }
-
-  onSubmit(event: Event) {
-    event.preventDefault()
-    this.sendEmail()
+    eventEmitter.emit(SHOW_SNACKBAR, 'Success!')
+    eventEmitter.emit(SHOW_DIGESTFORM, false)
+  } catch (err) {
+    eventEmitter.emit(SHOW_SNACKBAR, 'Failed to send, please try again later.')
+    eventEmitter.emit(SHOW_DIGESTFORM, false)
   }
 }
 </script>
