@@ -23,7 +23,7 @@
     "core-js": "^3.27.0",
     "mitt": "^3.0.0",
     "nuxt": "^2.15.7",
-    "twilio": "^3.84.0",
+    "twilio": "^5.13.0",
     "vee-validate": "^3.4.13",
     "vue-class-component": "^7.2.6",
     "vue-e164": "^2.0.0",
