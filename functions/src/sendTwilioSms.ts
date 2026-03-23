@@ -1,11 +1,6 @@
 import * as functions from 'firebase-functions'
 import Client from 'twilio'
 
-const twilioClient = Client(
-  process.env.TWILIO_ACCOUNT_SID,
-  process.env.TWILIO_AUTH_TOKEN,
-)
-
 interface SMS {
   to: string
   message: string
@@ -61,6 +56,14 @@ export const sendTwilioSms = functions.https.onRequest(async (req, res) => {
         .json({ error: 'Server misconfiguration: sender number not set' })
       return
     }
+
+    const accountSid = process.env.TWILIO_ACCOUNT_SID
+    const authToken = process.env.TWILIO_AUTH_TOKEN
+    if (!accountSid || !authToken) {
+      res.status(500).json({ error: 'Server misconfiguration: Twilio credentials not set' })
+      return
+    }
+    const twilioClient = Client(accountSid, authToken)
 
     // Send SMS via Twilio
     const response = await twilioClient.messages.create({

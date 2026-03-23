@@ -1,13 +1,6 @@
 import sgMail from '@sendgrid/mail'
 import * as functions from 'firebase-functions'
 
-const sendGridApiKey =
-  (functions.config().sendgrid && functions.config().sendgrid.api_key) ||
-  process.env.SENDGRID_API_KEY ||
-  ''
-
-sgMail.setApiKey(sendGridApiKey)
-
 interface Email {
   to: string
   subject: string
@@ -65,6 +58,18 @@ export const sendGridMail = functions.https.onRequest(async (req, res) => {
         .json({ error: 'Server misconfiguration: sender address not set' })
       return
     }
+
+    // Resolve API key at request time so deployments do not fail when env vars
+    // are unavailable during source analysis.
+    const sendGridApiKey =
+      (functions.config().sendgrid && functions.config().sendgrid.api_key) ||
+      process.env.SENDGRID_API_KEY ||
+      ''
+    if (!sendGridApiKey) {
+      res.status(500).json({ error: 'Server misconfiguration: SendGrid key not set' })
+      return
+    }
+    sgMail.setApiKey(sendGridApiKey)
 
     // Send email via SendGrid
     const mailData: sgMail.MailDataRequired = {

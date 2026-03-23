@@ -1,5 +1,5 @@
 <template>
-  <v-sheet class="map-container" ref="googlemap"></v-sheet>
+  <div class="map-container" ref="googlemap"></div>
 </template>
 
 <script setup lang="ts">
@@ -34,12 +34,21 @@ async function setGoogleMap(lat: number, lng: number, zoom: number) {
 }
 
 async function setMarker(lat: number, lng: number, mapInstance: any) {
-  const { AdvancedMarkerElement } = await loader.importLibrary('marker')
-  marker = new AdvancedMarkerElement({
-    position: { lat, lng },
-    map: mapInstance,
-    title: 'Selection',
-  })
+  const mapId = (config.public as any)?.GOOGLE_MAPS_MAP_ID
+  if (mapId) {
+    const { AdvancedMarkerElement } = await loader.importLibrary('marker')
+    marker = new AdvancedMarkerElement({
+      position: { lat, lng },
+      map: mapInstance,
+      title: 'Selection',
+    })
+  } else {
+    marker = new google.maps.Marker({
+      position: { lat, lng },
+      map: mapInstance,
+      title: 'Selection',
+    })
+  }
 }
 
 onMounted(() => {
@@ -61,9 +70,15 @@ onMounted(() => {
 
     // Only conditionally fall back if no selected country
     if (!store.selectedCountry) {
-      navigator.geolocation.getCurrentPosition(({ coords }) => {
-        setGoogleMap(coords.latitude, coords.longitude, 4)
-      })
+      navigator.geolocation.getCurrentPosition(
+        ({ coords }) => {
+          setGoogleMap(coords.latitude, coords.longitude, 4)
+        },
+        () => {
+          // Geolocation denied or unavailable — show world overview
+          setGoogleMap(20, 0, 2)
+        },
+      )
     }
   })
 })
